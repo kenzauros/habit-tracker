@@ -1,5 +1,5 @@
-import type { Habit } from '../types'
-import { HabitItem } from './HabitItem'
+import type { Habit } from '../../types'
+import { HabitItem } from '../HabitItem/HabitItem'
 
 type Props = {
   habits: Habit[]

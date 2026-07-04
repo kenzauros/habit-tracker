@@ -1,4 +1,4 @@
-import { useWeekNav } from '../hooks/useWeekNav'
+import { useWeekNav } from '../../hooks/useWeekNav'
 
 type Props = {
   today: Date

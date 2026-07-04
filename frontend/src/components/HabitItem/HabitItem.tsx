@@ -1,4 +1,4 @@
-import type { Habit } from '../types'
+import type { Habit } from '../../types'
 
 type Props = {
   habit: Habit
