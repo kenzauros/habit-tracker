@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(./secrets/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.ssh/**)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(uv run alembic downgrade:*)",
+      "Bash(uv remove:*)",
+      "WebFetch"
+    ],
+    "allow": [
+      "Bash(pnpm test:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm dev:*)",
+      "Bash(uv run alembic upgrade:*)",
+      "Bash(uv run uvicorn:*)",
+      "Bash(uv add:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "cd frontend && pnpm guard:clock" },
+          { "type": "command", "command": "cd frontend && pnpm guard:types" }
+        ]
+      }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "cd frontend && pnpm guard:test" } ] }
+    ]
+  }
+}
