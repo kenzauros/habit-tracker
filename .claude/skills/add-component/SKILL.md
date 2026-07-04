@@ -20,11 +20,10 @@ argument-hint: "[コンポーネント名]"
 
 ## 手順
 
-1. `frontend/src/components/$0/` ディレクトリを作成する
-2. `${CLAUDE_SKILL_DIR}/templates/component.tsx.tmpl` を読み込み、`COMPONENT_NAME` を `$0` に置換して `$0.tsx` として保存する
-3. 同じ規約でテストファイル `$0.test.tsx` を作成する。最低1つのレンダリングテストと、主要なふるまい1つのテストを書く
-4. 生成物が状態を持つ場合は `frontend/src/hooks/use$0.ts` も作成する
-5. `frontend/src/App.css` に `.$0` のスタイルをCSS変数を使って追記する
+1. `${CLAUDE_SKILL_DIR}/templates/component.tsx.tmpl` を読み込み、`COMPONENT_NAME` を `$0` に置換して `frontend/src/components/$0.tsx` として保存する
+2. 同じ規約でテストファイル `frontend/src/components/$0.test.tsx` を作成する。最低1つのレンダリングテストと、主要なふるまい1つのテストを書く
+3. 生成物が状態を持つ場合は `frontend/src/hooks/use$0.ts` も作成する
+4. `frontend/src/App.css` に `.$0` のスタイルをCSS変数を使って追記する
 
 ## 出力形式
 

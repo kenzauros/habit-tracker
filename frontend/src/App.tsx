@@ -1,7 +1,7 @@
 import { useHabits } from './hooks/useHabits'
-import { HabitList } from './components/HabitList/HabitList'
-import { ArchivedSection } from './components/ArchivedSection/ArchivedSection'
-import { WeeklyCalendar } from './components/WeeklyCalendar/WeeklyCalendar'
+import { HabitList } from './components/HabitList'
+import { ArchivedSection } from './components/ArchivedSection'
+import { WeeklyCalendar } from './components/WeeklyCalendar'
 import './App.css'
 
 function App() {
