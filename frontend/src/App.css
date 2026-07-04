@@ -67,3 +67,19 @@
   background-color: var(--color-accent);
   color: var(--color-bg);
 }
+
+.streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background-color: var(--color-accent);
+  color: var(--color-bg);
+  font-size: 0.875rem;
+}
+
+.streak-badge-empty {
+  background-color: transparent;
+  color: var(--color-muted);
+}
