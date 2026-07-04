@@ -16,7 +16,8 @@
 
 .habit-list,
 .archived-section,
-.weekly-calendar-days {
+.weekly-calendar-days,
+.monthly-heatmap-days {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -38,4 +39,31 @@
 .weekly-calendar-days {
   display: flex;
   gap: 0.5rem;
+}
+
+.monthly-heatmap-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.monthly-heatmap-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.monthly-heatmap-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border: 1px solid var(--color-border);
+  color: var(--color-muted);
+}
+
+.monthly-heatmap-day-checked {
+  background-color: var(--color-accent);
+  color: var(--color-bg);
 }

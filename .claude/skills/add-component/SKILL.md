@@ -1,27 +1,30 @@
 ---
 name: add-component
 description: Habit TrackerのReactコンポーネントを規約に沿って新規作成する。コンポーネント本体とテストファイルをセットで生成したいときに使う。
+argument-hint: "[コンポーネント名]"
 ---
 
 # コンポーネント追加
 
-Habit TrackerのUIコンポーネントを新規作成します。
+`$0` という名前のUIコンポーネントを新規作成します。
+
+## 既存のコンポーネント
+
+以下の既存コンポーネントと命名・構成の一貫性を保つこと。
+
+!`ls frontend/src/components`
+
+## 準拠する規約
+
+!`cat .claude/rules/components.md`
 
 ## 手順
 
-1. `frontend/src/components/<コンポーネント名>/` ディレクトリを作成する
-2. 以下のファイルを生成する
-   - `<コンポーネント名>.tsx` — コンポーネント本体
-   - `<コンポーネント名>.test.tsx` — Vitest + Testing Library のテスト
-3. 生成物が状態を持つ場合は、`frontend/src/hooks/use<コンポーネント名>.ts` も作成する
-
-## 規約
-
-- props は5個までを目安にする
-- 状態は hooks に持たせ、コンポーネント本体は表示に専念する
-- 一覧が空のときは専用の表示を出す
-- 操作要素には aria-label を付ける
-- 色は CSS 変数にまとめ、値を直書きしない
+1. `frontend/src/components/$0/` ディレクトリを作成する
+2. `${CLAUDE_SKILL_DIR}/templates/component.tsx.tmpl` を読み込み、`COMPONENT_NAME` を `$0` に置換して `$0.tsx` として保存する
+3. 同じ規約でテストファイル `$0.test.tsx` を作成する。最低1つのレンダリングテストと、主要なふるまい1つのテストを書く
+4. 生成物が状態を持つ場合は `frontend/src/hooks/use$0.ts` も作成する
+5. `frontend/src/App.css` に `.$0` のスタイルをCSS変数を使って追記する
 
 ## 出力形式
 
