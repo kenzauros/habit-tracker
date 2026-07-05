@@ -1,29 +1,39 @@
-import type { Habit } from '../types'
+import { useState } from "react";
+import type { Habit } from "../data/types";
 
-type Props = {
-  habits: Habit[]
-  onRestore: (habitId: string) => void
+interface Props {
+  habits: Habit[];
+  onUnarchive: (id: string) => void;
 }
 
-export function ArchivedSection({ habits, onRestore }: Props) {
-  if (habits.length === 0) {
-    return <p className="archived-section-empty">アーカイブ済みの習慣はありません</p>
-  }
+export function ArchivedSection({ habits, onUnarchive }: Props) {
+  const [showArchived, setShowArchived] = useState(false);
+
+  if (habits.length === 0) return null;
 
   return (
-    <ul className="archived-section">
-      {habits.map((habit) => (
-        <li key={habit.id} className="archived-section-item">
-          <span>{habit.name}</span>
-          <button
-            type="button"
-            aria-label={`${habit.name}を復元`}
-            onClick={() => onRestore(habit.id)}
-          >
-            復元
-          </button>
-        </li>
-      ))}
-    </ul>
-  )
+    <div className="archived-section">
+      <button
+        className="toggle-archived"
+        onClick={() => setShowArchived((v) => !v)}
+      >
+        {showArchived ? "▲" : "▼"} アーカイブ済み ({habits.length})
+      </button>
+      {showArchived && (
+        <ul className="habit-list archived-list">
+          {habits.map((habit) => (
+            <li key={habit.id} className="habit-item archived-item">
+              <span className="habit-name">{habit.name}</span>
+              {habit.category && (
+                <span className="archived-cat">{habit.category}</span>
+              )}
+              <button className="unarchive-btn" onClick={() => onUnarchive(habit.id)}>
+                元に戻す
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 }

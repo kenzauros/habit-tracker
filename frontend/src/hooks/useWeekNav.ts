@@ -1,42 +1,25 @@
-import { useState } from 'react'
+import { useState } from "react";
+import { toLocalDateString } from "../data/streak";
 
-function startOfWeek(date: Date) {
-  const start = new Date(date)
-  start.setDate(start.getDate() - start.getDay())
-  return start
+function getWeekDates(today: Date, offset: number): string[] {
+  const dow = today.getDay(); // 0=Sun
+  const daysToMonday = (dow + 6) % 7;
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() - daysToMonday + offset * 7 + i);
+    return toLocalDateString(d);
+  });
 }
 
-function toDateKey(date: Date) {
-  const year = date.getFullYear()
-  const month = `${date.getMonth() + 1}`.padStart(2, '0')
-  const day = `${date.getDate()}`.padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
+export function useWeekNav() {
+  const [offset, setOffset] = useState(0);
+  const weekDates = getWeekDates(new Date(), offset);
 
-export function useWeekNav(today: Date) {
-  const [weekStart, setWeekStart] = useState(() => startOfWeek(today))
-
-  const days = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(weekStart)
-    d.setDate(d.getDate() + i)
-    return toDateKey(d)
-  })
-
-  function goToPreviousWeek() {
-    setWeekStart((prev) => {
-      const d = new Date(prev)
-      d.setDate(d.getDate() - 7)
-      return d
-    })
-  }
-
-  function goToNextWeek() {
-    setWeekStart((prev) => {
-      const d = new Date(prev)
-      d.setDate(d.getDate() + 7)
-      return d
-    })
-  }
-
-  return { days, goToPreviousWeek, goToNextWeek }
+  return {
+    weekDates,
+    offset,
+    prevWeek: () => setOffset((o) => o - 1),
+    nextWeek: () => setOffset((o) => o + 1),
+    goToday: () => setOffset(0),
+  };
 }

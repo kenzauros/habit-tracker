@@ -1,52 +1,86 @@
-import { useState } from 'react'
-import type { Habit } from '../types'
+import { useState, useEffect, useCallback } from "react";
+import type { Habit } from "../data/types";
+import { toLocalDateString, calcStreak } from "../data/streak";
+import { fetchHabits, createHabit, updateHabit, addLog, removeLog } from "../data/api";
 
-const initialHabits: Habit[] = [
-  {
-    id: 'habit-1',
-    name: '読書',
-    category: '学習',
-    archived: false,
-    logs: [{ checkedDate: '2026-07-01' }, { checkedDate: '2026-07-02' }],
-  },
-  {
-    id: 'habit-2',
-    name: 'ストレッチ',
-    category: '健康',
-    archived: false,
-    logs: [],
-  },
-]
+export function useHabits(onUnauthorized?: () => void) {
+  const [habits, setHabits] = useState<Habit[]>([]);
 
-export function useHabits() {
-  const [habits, setHabits] = useState<Habit[]>(initialHabits)
+  const loadData = useCallback(async () => {
+    const result = await fetchHabits();
+    if (!result.ok) {
+      if (result.status === 401 && onUnauthorized) onUnauthorized();
+      return;
+    }
+    setHabits(result.data);
+  }, [onUnauthorized]);
 
-  const activeHabits = habits.filter((habit) => !habit.archived)
-  const archivedHabits = habits.filter((habit) => habit.archived)
+  useEffect(() => { loadData(); }, [loadData]);
 
-  function checkIn(habitId: string) {
-    const today = new Date()
-    const checkedDate = `${today.getFullYear()}-${`${today.getMonth() + 1}`.padStart(2, '0')}-${`${today.getDate()}`.padStart(2, '0')}`
-    setHabits((prev) =>
-      prev.map((habit) =>
-        habit.id === habitId
-          ? { ...habit, logs: [...habit.logs, { checkedDate }] }
-          : habit,
-      ),
-    )
+  async function addHabit(name: string, category?: string) {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const result = await createHabit(trimmed, category?.trim() || undefined);
+    if (result.ok) setHabits((prev) => [...prev, result.data]);
   }
 
-  function archive(habitId: string) {
-    setHabits((prev) =>
-      prev.map((habit) => (habit.id === habitId ? { ...habit, archived: true } : habit)),
-    )
+  async function updateHabitMeta(id: string, name: string, category: string) {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const result = await updateHabit(id, {
+      name: trimmed,
+      category: category.trim() || null,
+    });
+    if (result.ok) setHabits((prev) => prev.map((h) => (h.id === id ? result.data : h)));
   }
 
-  function restore(habitId: string) {
-    setHabits((prev) =>
-      prev.map((habit) => (habit.id === habitId ? { ...habit, archived: false } : habit)),
-    )
+  async function archiveHabit(id: string) {
+    const result = await updateHabit(id, { archived: true });
+    if (result.ok) setHabits((prev) => prev.map((h) => (h.id === id ? result.data : h)));
   }
 
-  return { habits, activeHabits, archivedHabits, checkIn, archive, restore }
+  async function unarchiveHabit(id: string) {
+    const result = await updateHabit(id, { archived: false });
+    if (result.ok) setHabits((prev) => prev.map((h) => (h.id === id ? result.data : h)));
+  }
+
+  async function checkIn(id: string) {
+    const today = toLocalDateString(new Date());
+    const result = await addLog(id, today);
+    if (result.ok) setHabits((prev) => prev.map((h) => (h.id === id ? result.data : h)));
+  }
+
+  async function uncheckIn(id: string) {
+    const today = toLocalDateString(new Date());
+    const result = await removeLog(id, today);
+    if (result.ok) setHabits((prev) => prev.map((h) => (h.id === id ? result.data : h)));
+  }
+
+  function isCheckedToday(habit: Habit): boolean {
+    return habit.checkedDates.includes(toLocalDateString(new Date()));
+  }
+
+  function getStreak(habit: Habit): number {
+    return calcStreak(habit.checkedDates, toLocalDateString(new Date()));
+  }
+
+  const activeHabits = habits.filter((h) => !h.archived);
+  const archivedHabits = habits.filter((h) => h.archived);
+  const uniqueCategories = Array.from(
+    new Set(activeHabits.map((h) => h.category).filter(Boolean) as string[])
+  ).sort((a, b) => a.localeCompare(b, "ja"));
+
+  return {
+    activeHabits,
+    archivedHabits,
+    uniqueCategories,
+    addHabit,
+    updateHabitMeta,
+    archiveHabit,
+    unarchiveHabit,
+    checkIn,
+    uncheckIn,
+    isCheckedToday,
+    getStreak,
+  };
 }
