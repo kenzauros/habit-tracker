@@ -1,7 +1,13 @@
 export interface Habit {
   id: string;
   name: string;
-  checkedDates: string[]; // ISO date strings "YYYY-MM-DD"
-  archived?: boolean;
-  category?: string;
+  createdAt: string;
+  checkIns: string[];
+  archived: boolean;
+  category: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
 }

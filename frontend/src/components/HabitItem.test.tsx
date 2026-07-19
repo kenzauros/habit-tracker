@@ -1,100 +1,100 @@
-// @vitest-environment jsdom
-import { describe, it, expect, vi, afterEach } from "vitest";
-import { render, screen, cleanup } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import "@testing-library/jest-dom/vitest";
 import { HabitItem } from "./HabitItem";
 import type { Habit } from "../data/types";
+import type { HabitResult } from "../data/habit";
 
 function makeHabit(overrides: Partial<Habit> = {}): Habit {
   return {
-    id: "h1",
-    name: "運動",
-    checkedDates: [],
+    id: "1",
+    name: "運動する",
+    createdAt: "2024-01-01T00:00:00.000Z",
+    checkIns: [],
+    archived: false,
+    category: "健康",
     ...overrides,
   };
 }
 
-function defaultProps(overrides = {}) {
-  return {
-    habit: makeHabit(),
-    checked: false,
-    streak: 0,
-    isEditing: false,
-    editValue: "運動",
-    editCategory: "",
-    editCategoryPlaceholder: "",
-    onEditValueChange: vi.fn(),
-    onEditCategoryChange: vi.fn(),
-    onStartEdit: vi.fn(),
-    onCommitEdit: vi.fn(),
-    onCancelEdit: vi.fn(),
-    onCheckIn: vi.fn(),
-    onArchive: vi.fn(),
-    ...overrides,
-  };
-}
-
-afterEach(cleanup);
-
-describe("HabitItem 編集フォーム", () => {
-  it("名前フィールド → カテゴリフィールドへのフォーカス移動では確定しない", async () => {
+describe("HabitItem", () => {
+  it("保存に失敗すると、編集画面を閉じずに理由を表示する", async () => {
     const user = userEvent.setup();
-    const onCommitEdit = vi.fn();
-    render(
-      <HabitItem
-        {...defaultProps({ isEditing: true, onCommitEdit })}
-      />
+    const onEdit = vi.fn(
+      async (): Promise<HabitResult> => ({ ok: false, error: "duplicate" }),
     );
-
-    const nameInput = screen.getByPlaceholderText("習慣名");
-    const catInput = screen.getByPlaceholderText("カテゴリ（任意）");
-
-    await user.click(nameInput);
-    await user.click(catInput);
-
-    expect(onCommitEdit).not.toHaveBeenCalled();
-  });
-
-  it("編集フォームの外へフォーカスが移動したとき→確定する", async () => {
-    const user = userEvent.setup();
-    const onCommitEdit = vi.fn();
     render(
-      <div>
+      <ul>
         <HabitItem
-          {...defaultProps({ isEditing: true, onCommitEdit })}
+          habit={makeHabit()}
+          streak={0}
+          checkedInToday={false}
+          onCheckIn={vi.fn()}
+          onEdit={onEdit}
+          onArchive={vi.fn()}
         />
-        <button>外のボタン</button>
-      </div>
+      </ul>,
     );
 
-    const nameInput = screen.getByPlaceholderText("習慣名");
-    await user.click(nameInput);
-    await user.click(screen.getByText("外のボタン"));
-    await new Promise((r) => setTimeout(r, 0)); // flush blur's setTimeout
+    await user.click(screen.getByRole("button", { name: "編集" }));
+    await user.click(screen.getByRole("button", { name: "保存" }));
 
-    expect(onCommitEdit).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText("同じ名前の習慣がすでにあります。")).toBeInTheDocument();
+    expect(screen.getByLabelText("習慣名を編集")).toBeInTheDocument();
   });
 
-  it("Enter キー押下 → 確定する", async () => {
+  it("保存に成功すると、編集画面を閉じる", async () => {
     const user = userEvent.setup();
-    const onCommitEdit = vi.fn();
+    const onEdit = vi.fn(
+      async (): Promise<HabitResult> => ({ ok: true, habit: makeHabit({ name: "筋トレする" }) }),
+    );
     render(
-      <HabitItem {...defaultProps({ isEditing: true, onCommitEdit })} />
+      <ul>
+        <HabitItem
+          habit={makeHabit()}
+          streak={0}
+          checkedInToday={false}
+          onCheckIn={vi.fn()}
+          onEdit={onEdit}
+          onArchive={vi.fn()}
+        />
+      </ul>,
     );
 
-    await user.type(screen.getByPlaceholderText("習慣名"), "{Enter}");
-    expect(onCommitEdit).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByRole("button", { name: "編集" }));
+    await user.click(screen.getByRole("button", { name: "保存" }));
+
+    await screen.findByRole("button", { name: "編集" });
+    expect(screen.queryByLabelText("習慣名を編集")).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("Escape キー押下 → キャンセルする", async () => {
+  it("キャンセルすると、エラーも編集内容も破棄される", async () => {
     const user = userEvent.setup();
-    const onCancelEdit = vi.fn();
+    const onEdit = vi.fn(
+      async (): Promise<HabitResult> => ({ ok: false, error: "empty" }),
+    );
     render(
-      <HabitItem {...defaultProps({ isEditing: true, onCancelEdit })} />
+      <ul>
+        <HabitItem
+          habit={makeHabit()}
+          streak={0}
+          checkedInToday={false}
+          onCheckIn={vi.fn()}
+          onEdit={onEdit}
+          onArchive={vi.fn()}
+        />
+      </ul>,
     );
 
-    await user.type(screen.getByPlaceholderText("習慣名"), "{Escape}");
-    expect(onCancelEdit).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByRole("button", { name: "編集" }));
+    await user.click(screen.getByRole("button", { name: "保存" }));
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "キャンセル" }));
+    expect(screen.queryByLabelText("習慣名を編集")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "編集" }));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

@@ -1,86 +1,109 @@
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import type { Habit } from "../data/types";
-import { toLocalDateString, calcStreak } from "../data/streak";
-import { fetchHabits, createHabit, updateHabit, addLog, removeLog } from "../data/api";
+import type { HabitResult } from "../data/habit";
+import { addCheckIn as applyCheckInLocally, createHabit, renameHabit } from "../data/habit";
+import { todayString } from "../data/date";
+import * as habitsApi from "../data/habitsApi";
 
-export function useHabits(onUnauthorized?: () => void) {
+export function useHabits() {
   const [habits, setHabits] = useState<Habit[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const loadData = useCallback(async () => {
-    const result = await fetchHabits();
-    if (!result.ok) {
-      if (result.status === 401 && onUnauthorized) onUnauthorized();
-      return;
-    }
-    setHabits(result.data);
-  }, [onUnauthorized]);
-
-  useEffect(() => { loadData(); }, [loadData]);
-
-  async function addHabit(name: string, category?: string) {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    const result = await createHabit(trimmed, category?.trim() || undefined);
-    if (result.ok) setHabits((prev) => [...prev, result.data]);
-  }
-
-  async function updateHabitMeta(id: string, name: string, category: string) {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    const result = await updateHabit(id, {
-      name: trimmed,
-      category: category.trim() || null,
+  useEffect(() => {
+    let cancelled = false;
+    habitsApi.fetchHabits().then((result) => {
+      if (cancelled) return;
+      if (result.ok) {
+        setHabits(result.habits);
+      } else {
+        setError("習慣の取得に失敗しました。");
+      }
+      setLoading(false);
     });
-    if (result.ok) setHabits((prev) => prev.map((h) => (h.id === id ? result.data : h)));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function addHabit(name: string, category: string): Promise<HabitResult> {
+    const localCheck = createHabit(name, category, habits);
+    if (!localCheck.ok) return localCheck;
+
+    const result = await habitsApi.createHabit(name, category);
+    if (result.ok) {
+      setHabits((prev) => [...prev, result.habit]);
+    }
+    return result;
   }
 
-  async function archiveHabit(id: string) {
-    const result = await updateHabit(id, { archived: true });
-    if (result.ok) setHabits((prev) => prev.map((h) => (h.id === id ? result.data : h)));
+  async function editHabit(id: string, name: string, category: string): Promise<HabitResult> {
+    const target = habits.find((habit) => habit.id === id);
+    if (!target) return { ok: false, error: "network" };
+
+    const localCheck = renameHabit(target, name, category, habits);
+    if (!localCheck.ok) return localCheck;
+
+    const result = await habitsApi.renameHabit(id, name, category);
+    if (result.ok) {
+      setHabits((prev) => prev.map((habit) => (habit.id === id ? result.habit : habit)));
+    }
+    return result;
   }
 
-  async function unarchiveHabit(id: string) {
-    const result = await updateHabit(id, { archived: false });
-    if (result.ok) setHabits((prev) => prev.map((h) => (h.id === id ? result.data : h)));
+  function checkInToday(id: string) {
+    const date = todayString();
+    setHabits((prev) =>
+      prev.map((habit) => (habit.id === id ? applyCheckInLocally(habit, date) : habit)),
+    );
+    habitsApi.checkIn(id, date).then((result) => {
+      if (result.ok) {
+        setHabits((prev) => prev.map((habit) => (habit.id === id ? result.habit : habit)));
+      } else {
+        rollbackCheckIn(id, date);
+      }
+    });
   }
 
-  async function checkIn(id: string) {
-    const today = toLocalDateString(new Date());
-    const result = await addLog(id, today);
-    if (result.ok) setHabits((prev) => prev.map((h) => (h.id === id ? result.data : h)));
+  function rollbackCheckIn(id: string, date: string) {
+    setHabits((prev) =>
+      prev.map((habit) =>
+        habit.id === id ? { ...habit, checkIns: habit.checkIns.filter((d) => d !== date) } : habit,
+      ),
+    );
   }
 
-  async function uncheckIn(id: string) {
-    const today = toLocalDateString(new Date());
-    const result = await removeLog(id, today);
-    if (result.ok) setHabits((prev) => prev.map((h) => (h.id === id ? result.data : h)));
+  function archiveHabit(id: string) {
+    setArchivedLocally(id, true, setHabits);
+    habitsApi.archiveHabit(id).then((result) => {
+      if (!result.ok) setArchivedLocally(id, false, setHabits);
+    });
   }
 
-  function isCheckedToday(habit: Habit): boolean {
-    return habit.checkedDates.includes(toLocalDateString(new Date()));
+  function unarchiveHabit(id: string) {
+    setArchivedLocally(id, false, setHabits);
+    habitsApi.unarchiveHabit(id).then((result) => {
+      if (!result.ok) setArchivedLocally(id, true, setHabits);
+    });
   }
-
-  function getStreak(habit: Habit): number {
-    return calcStreak(habit.checkedDates, toLocalDateString(new Date()));
-  }
-
-  const activeHabits = habits.filter((h) => !h.archived);
-  const archivedHabits = habits.filter((h) => h.archived);
-  const uniqueCategories = Array.from(
-    new Set(activeHabits.map((h) => h.category).filter(Boolean) as string[])
-  ).sort((a, b) => a.localeCompare(b, "ja"));
 
   return {
-    activeHabits,
-    archivedHabits,
-    uniqueCategories,
+    habits,
+    loading,
+    error,
     addHabit,
-    updateHabitMeta,
+    checkInToday,
+    editHabit,
     archiveHabit,
     unarchiveHabit,
-    checkIn,
-    uncheckIn,
-    isCheckedToday,
-    getStreak,
   };
+}
+
+function setArchivedLocally(
+  id: string,
+  archived: boolean,
+  setHabits: Dispatch<SetStateAction<Habit[]>>,
+) {
+  setHabits((prev) => prev.map((habit) => (habit.id === id ? { ...habit, archived } : habit)));
 }

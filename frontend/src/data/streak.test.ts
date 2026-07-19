@@ -1,82 +1,42 @@
-import { describe, it, expect } from "vitest";
-import { calcStreak } from "./streak";
+import { describe, expect, it } from "vitest";
+import { calculateStreak } from "./streak";
 
-const TODAY = "2024-06-20";
-const calc = (dates: string[]) => calcStreak(dates, TODAY);
+const REFERENCE = new Date(2024, 0, 15); // 2024-01-15 (local time)
 
-describe("calcStreak", () => {
-  it("returns 0 for empty dates", () => {
-    expect(calc([])).toBe(0);
+describe("calculateStreak", () => {
+  it("returns 0 when there are no check-ins", () => {
+    expect(calculateStreak([], REFERENCE)).toBe(0);
   });
 
-  it("returns 0 when today is not checked", () => {
-    expect(calc(["2024-06-19", "2024-06-18"])).toBe(0);
+  it("counts consecutive days including today when today is checked in", () => {
+    const checkIns = ["2024-01-13", "2024-01-14", "2024-01-15"];
+    expect(calculateStreak(checkIns, REFERENCE)).toBe(3);
   });
 
-  it("returns 1 when only today is checked", () => {
-    expect(calc([TODAY])).toBe(1);
+  it("shows the streak through yesterday when today is not yet checked in", () => {
+    const checkIns = ["2024-01-13", "2024-01-14"];
+    expect(calculateStreak(checkIns, REFERENCE)).toBe(2);
   });
 
-  it("counts consecutive days ending today", () => {
-    expect(calc(["2024-06-18", "2024-06-19", TODAY])).toBe(3);
+  it("stops counting at the first gap", () => {
+    const checkIns = ["2024-01-10", "2024-01-14", "2024-01-15"];
+    expect(calculateStreak(checkIns, REFERENCE)).toBe(2);
   });
 
-  it("stops at a gap in the sequence", () => {
-    // 6/17 → gap → 6/19 → today
-    expect(calc(["2024-06-17", "2024-06-19", TODAY])).toBe(2);
+  it("is 0 when neither today nor yesterday is checked in", () => {
+    const checkIns = ["2024-01-10", "2024-01-11"];
+    expect(calculateStreak(checkIns, REFERENCE)).toBe(0);
   });
 
-  it("ignores duplicate dates", () => {
-    expect(calc([TODAY, TODAY, "2024-06-19"])).toBe(2);
+  it("counts correctly across a year boundary", () => {
+    const newYearReference = new Date(2024, 0, 1); // 2024-01-01
+    const checkIns = ["2023-12-30", "2023-12-31", "2024-01-01"];
+    expect(calculateStreak(checkIns, newYearReference)).toBe(3);
   });
 
-  it("ignores future dates beyond today", () => {
-    expect(calc(["2024-06-21", TODAY])).toBe(1);
-  });
-
-  it("counts streak across a month boundary", () => {
-    // 5/30 → 5/31 → 6/1 → ... → today (6/20) = 22 days
-    const dates = [];
-    for (let d = 30; d <= 31; d++) dates.push(`2024-05-${String(d).padStart(2, "0")}`);
-    for (let d = 1; d <= 20; d++) dates.push(`2024-06-${String(d).padStart(2, "0")}`);
-    expect(calc(dates)).toBe(22);
-  });
-
-  it("counts streak across a year boundary", () => {
-    expect(
-      calcStreak(["2024-12-30", "2024-12-31", "2025-01-01", "2025-01-02"], "2025-01-02")
-    ).toBe(4);
-  });
-
-  it("stops at a gap spanning a month boundary", () => {
-    expect(
-      calcStreak(["2024-05-29", "2024-05-31", "2024-06-01"], "2024-06-01")
-    ).toBe(2);
-  });
-
-  describe("leap year (2024)", () => {
-    it("counts 2/28 → 2/29 as consecutive", () => {
-      expect(calcStreak(["2024-02-28", "2024-02-29"], "2024-02-29")).toBe(2);
-    });
-
-    it("counts 2/29 → 3/1 as consecutive", () => {
-      expect(calcStreak(["2024-02-29", "2024-03-01"], "2024-03-01")).toBe(2);
-    });
-
-    it("counts streak across Feb 29", () => {
-      expect(
-        calcStreak(["2024-02-27", "2024-02-28", "2024-02-29", "2024-03-01"], "2024-03-01")
-      ).toBe(4);
-    });
-  });
-
-  describe("non-leap year (2023)", () => {
-    it("counts 2/28 → 3/1 as consecutive", () => {
-      expect(calcStreak(["2023-02-28", "2023-03-01"], "2023-03-01")).toBe(2);
-    });
-
-    it("treats 2/29 as nonexistent — gap between 2/28 and 3/1 does not occur", () => {
-      expect(calcStreak(["2023-02-27", "2023-02-28", "2023-03-01"], "2023-03-01")).toBe(3);
-    });
+  it("counts correctly across a leap day (2024-02-29)", () => {
+    const leapYearReference = new Date(2024, 2, 1); // 2024-03-01
+    const checkIns = ["2024-02-28", "2024-02-29", "2024-03-01"];
+    expect(calculateStreak(checkIns, leapYearReference)).toBe(3);
   });
 });

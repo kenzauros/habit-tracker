@@ -1,78 +1,45 @@
-import type { Habit } from "../data/types";
-import type { EditState } from "../hooks/useEditState";
-import { groupByCategory, categoryColorSlot } from "../data/habitUtils";
+import type { CategoryGroup } from "../hooks/selectors";
+import type { HabitResult } from "../data/habit";
 import { HabitItem } from "./HabitItem";
 
 interface Props {
-  habits: Habit[];
-  isCheckedToday: (habit: Habit) => boolean;
-  getStreak: (habit: Habit) => number;
+  groups: CategoryGroup[];
   onCheckIn: (id: string) => void;
+  onEdit: (id: string, name: string, category: string) => Promise<HabitResult>;
   onArchive: (id: string) => void;
-  editState: EditState;
 }
 
-export function HabitList({
-  habits,
-  isCheckedToday,
-  getStreak,
-  onCheckIn,
-  onArchive,
-  editState,
-}: Props) {
-  if (habits.length === 0) {
-    return (
-      <p className="empty">習慣をまだ登録していません。上から追加してみましょう！</p>
-    );
+export function HabitList({ groups, onCheckIn, onEdit, onArchive }: Props) {
+  if (groups.length === 0) {
+    return <p className="empty-message">まだ習慣がありません。上のフォームから追加してください。</p>;
   }
-  const groups = groupByCategory(habits);
-  const {
-    editingId,
-    editValue,
-    editCategory,
-    editCategoryPlaceholder,
-    setEditValue,
-    setEditCategory,
-    startEdit,
-    commitEdit,
-    cancelEdit,
-  } = editState;
 
   return (
-    <div className="groups">
-      {groups.map(({ category, habits: groupHabits }) => (
-        <section
-          key={category || "__none__"}
-          className="category-group"
-          {...(category ? { "data-cat-color": categoryColorSlot(category) } : {})}
-        >
-          {category && (
-            <h2 className="category-header">
-              <span className="category-dot" />
+    <div className="category-groups">
+      {groups.map(({ category, color, habits }) => (
+        <section key={category} className="category-group">
+          <h2 className="category-heading">
+            <span
+              className="category-badge"
+              style={{
+                backgroundColor: color.bg,
+                color: color.text,
+                borderColor: color.border,
+              }}
+            >
               {category}
-            </h2>
-          )}
-          {!category && groups.length > 1 && (
-            <h2 className="category-header uncategorized">未分類</h2>
-          )}
+            </span>
+          </h2>
           <ul className="habit-list">
-            {groupHabits.map((habit) => (
+            {habits.map(({ habit, streak, checkedInToday }) => (
               <HabitItem
                 key={habit.id}
                 habit={habit}
-                checked={isCheckedToday(habit)}
-                streak={getStreak(habit)}
-                isEditing={editingId === habit.id}
-                editValue={editValue}
-                editCategory={editCategory}
-                editCategoryPlaceholder={editCategoryPlaceholder}
-                onEditValueChange={setEditValue}
-                onEditCategoryChange={setEditCategory}
-                onStartEdit={() => startEdit(habit)}
-                onCommitEdit={() => commitEdit(habit.id)}
-                onCancelEdit={cancelEdit}
-                onCheckIn={() => onCheckIn(habit.id)}
-                onArchive={() => onArchive(habit.id)}
+                streak={streak}
+                checkedInToday={checkedInToday}
+                onCheckIn={onCheckIn}
+                onEdit={onEdit}
+                onArchive={onArchive}
               />
             ))}
           </ul>

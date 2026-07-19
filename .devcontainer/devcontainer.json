@@ -1,5 +1,5 @@
 {
-  // 学習用コンテナの名前
+  // 学習用コンテナーの名前
   "name": "habit-tracker",
 
   // ベースにする Linux イメージ
@@ -14,7 +14,7 @@
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
 
-  // コンテナ作成後に一度だけ実行（各エントリは並列で動く）
+  // コンテナー作成後に一度だけ実行（各エントリは並列で動く）
   "postCreateCommand": {
     "uv":         "curl -LsSf https://astral.sh/uv/install.sh | sh",
     "claude-code": "npm install -g @anthropic-ai/claude-code"
@@ -23,7 +23,7 @@
   // 開発サーバー（Vite）と API（FastAPI）のポートを転送する
   "forwardPorts": [5173, 8000],
 
-  // コンテナの中でも Claude Code を使えるようにする
+  // コンテナーの中でも Claude Code を使えるようにする
   "customizations": {
     "vscode": {
       "extensions": ["anthropic.claude-code"]

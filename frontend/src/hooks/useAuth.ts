@@ -1,45 +1,61 @@
-import { useState } from "react";
-import { setToken, removeToken, loginApi, registerApi, isAuthenticated } from "../data/auth";
+import { useCallback, useEffect, useState } from "react";
+import type { User } from "../data/types";
+import type { AuthResult } from "../data/authApi";
+import { fetchMe, login as loginApi, register as registerApi } from "../data/authApi";
+import { clearToken, getToken, setToken } from "../data/tokenStorage";
 
-export type AuthError = string | null;
+export type AuthStatus = "loading" | "anonymous" | "authenticated";
 
 export function useAuth() {
-  const [authenticated, setAuthenticated] = useState<boolean>(isAuthenticated);
-  const [error, setError] = useState<AuthError>(null);
-  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<AuthStatus>("loading");
+  const [user, setUser] = useState<User | null>(null);
 
-  async function login(email: string, password: string): Promise<boolean> {
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    if (!getToken()) {
+      setStatus("anonymous");
+      return;
+    }
+    fetchMe().then((result) => {
+      if (result.ok) {
+        setUser(result.data);
+        setStatus("authenticated");
+      } else {
+        clearToken();
+        setStatus("anonymous");
+      }
+    });
+  }, []);
+
+  const login = useCallback(async (email: string, password: string): Promise<AuthResult<string>> => {
     const result = await loginApi(email, password);
-    setLoading(false);
-    if (!result.ok) {
-      setError(result.message);
-      return false;
-    }
-    setToken(result.token);
-    setAuthenticated(true);
-    return true;
-  }
+    if (result.ok) await hydrateAfterAuth(result.data, setUser, setStatus);
+    return result;
+  }, []);
 
-  async function register(email: string, password: string): Promise<boolean> {
-    setLoading(true);
-    setError(null);
+  const register = useCallback(async (email: string, password: string): Promise<AuthResult<string>> => {
     const result = await registerApi(email, password);
-    setLoading(false);
-    if (!result.ok) {
-      setError(result.message);
-      return false;
-    }
-    setToken(result.token);
-    setAuthenticated(true);
-    return true;
-  }
+    if (result.ok) await hydrateAfterAuth(result.data, setUser, setStatus);
+    return result;
+  }, []);
 
-  function logout() {
-    removeToken();
-    setAuthenticated(false);
-  }
+  const logout = useCallback(() => {
+    clearToken();
+    setUser(null);
+    setStatus("anonymous");
+  }, []);
 
-  return { authenticated, error, loading, login, register, logout };
+  return { status, user, login, register, logout };
+}
+
+async function hydrateAfterAuth(
+  token: string,
+  setUser: (user: User) => void,
+  setStatus: (status: AuthStatus) => void,
+): Promise<void> {
+  setToken(token);
+  const me = await fetchMe();
+  if (me.ok) {
+    setUser(me.data);
+    setStatus("authenticated");
+  }
 }

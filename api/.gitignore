@@ -1,7 +1,15 @@
-.venv/
+# Python-generated files
 __pycache__/
-*.pyc
-*.db
-*.db-shm
-*.db-wal
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.pytest_cache/
+
+# Virtual environments
+.venv
+
+# Local secrets / SQLite database
 .env
+*.db

@@ -1,43 +1,79 @@
 {
-  "permissions": {
-    "deny": [
-      "Read(.env)",
-      "Read(.env.*)",
-      "Read(./secrets/**)",
-      "Read(~/.aws/**)",
-      "Read(~/.ssh/**)"
-    ],
-    "ask": [
-      "Bash(git push:*)",
-      "Bash(uv run alembic downgrade:*)",
-      "Bash(uv remove:*)",
-      "WebFetch"
-    ],
-    "allow": [
-      "Bash(pnpm test:*)",
-      "Bash(uv run pytest:*)",
-      "Bash(pnpm lint:*)",
-      "Bash(pnpm build:*)",
-      "Bash(pnpm dev:*)",
-      "Bash(uv run alembic upgrade:*)",
-      "Bash(uv run uvicorn:*)",
-      "Bash(uv add:*)",
-      "Bash(git status:*)",
-      "Bash(git diff:*)"
-    ]
-  },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "input=$(cat); f=$(printf '%s' \"$input\" | jq -r '.tool_input.file_path // empty'); content=$(printf '%s' \"$input\" | jq -r '.tool_input.content // .tool_input.new_string // empty'); case \"$f\" in */api/app/config.py) if printf '%s' \"$content\" | grep -qiE 'jwt_secret_key|cors_origins'; then echo 'JWT_SECRET_KEY / CORS 設定の変更をブロックしました（セキュリティ設定のため機械的な自動編集を許可していません）。意図した変更であれば、ユーザーに確認のうえ人が直接 api/app/config.py を編集してください。' >&2; exit 2; fi ;; esac"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
         "hooks": [
-          { "type": "command", "command": "cd frontend && pnpm guard:clock" },
-          { "type": "command", "command": "cd frontend && pnpm guard:types" }
+          { "type": "command", "command": "pnpm -C frontend guard:color" },
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); case \"$f\" in */api/app/models/*.py) uv run --directory api alembic check >/tmp/alembic-check.log 2>&1 || { cat /tmp/alembic-check.log >&2; echo 'モデル変更に対応するマイグレーションがありません: uv run --directory api alembic revision --autogenerate -m \"...\"' >&2; exit 2; };; esac"
+          }
         ]
       }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(pnpm -C frontend install:*)",
+      "Bash(pnpm -C frontend dev:*)",
+      "Bash(pnpm -C frontend test:*)",
+      "Bash(pnpm -C frontend lint)",
+      "Bash(pnpm -C frontend build)",
+      "Bash(uv sync --directory api:*)",
+      "Bash(uv run --directory api uvicorn:*)",
+      "Bash(uv run --directory api pytest:*)",
+      "Bash(uv run --directory api alembic current)",
+      "Bash(uv run --directory api alembic history)",
+      "Bash(uv run --directory api alembic check)",
+      "Bash(uv run --directory api alembic upgrade head)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)"
     ],
-    "Stop": [
-      { "hooks": [ { "type": "command", "command": "cd frontend && pnpm guard:test" } ] }
+    "ask": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git stash:*)",
+      "Bash(uv run --directory api alembic downgrade:*)",
+      "Bash(uv run --directory api alembic revision:*)",
+      "Bash(rm:*)",
+      "Bash(git push:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean:*)",
+      "Bash(git rebase:*)",
+      "Bash(git merge:*)",
+      "Bash(git checkout --:*)",
+      "Bash(pnpm -C frontend remove:*)",
+      "Bash(uv remove --directory api:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr merge:*)",
+      "Write(**/*.env)",
+      "Edit(**/*.env)",
+      "Edit(api/migrations/versions/**)",
+      "WebFetch"
+    ],
+    "deny": [
+      "Bash(rm -rf /*)",
+      "Bash(sudo:*)",
+      "Bash(curl * | sh*)",
+      "Bash(curl * | bash*)",
+      "Bash(git push --force:*)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(~/.ssh/**)"
     ]
   }
 }

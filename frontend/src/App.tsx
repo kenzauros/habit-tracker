@@ -1,65 +1,67 @@
 import { useAuth } from "./hooks/useAuth";
 import { useHabits } from "./hooks/useHabits";
-import { useEditState } from "./hooks/useEditState";
-import { LoginPage } from "./pages/LoginPage";
+import {
+  selectActiveGroups,
+  selectArchivedHabits,
+  selectWeeklyOverview,
+} from "./hooks/selectors";
 import { AddHabitForm } from "./components/AddHabitForm";
 import { HabitList } from "./components/HabitList";
 import { WeeklyCalendar } from "./components/WeeklyCalendar";
-import { ArchivedSection } from "./components/ArchivedSection";
+import { ArchivedHabitList } from "./components/ArchivedHabitList";
+import { LoginForm } from "./components/LoginForm";
 import "./App.css";
 
-function App() {
-  const { authenticated, error, loading, login, register, logout } = useAuth();
+interface HabitsAppProps {
+  email: string;
+  onLogout: () => void;
+}
 
-  const {
-    activeHabits,
-    archivedHabits,
-    uniqueCategories,
-    addHabit,
-    updateHabitMeta,
-    archiveHabit,
-    unarchiveHabit,
-    checkIn,
-    isCheckedToday,
-    getStreak,
-  } = useHabits(logout);
+function HabitsApp({ email, onLogout }: HabitsAppProps) {
+  const { habits, addHabit, checkInToday, editHabit, archiveHabit, unarchiveHabit } =
+    useHabits();
+  const weeklyOverview = selectWeeklyOverview(habits);
 
-  const editState = useEditState((id, name, category) => {
-    updateHabitMeta(id, name, category);
-  });
-
-  if (!authenticated) {
-    return (
-      <LoginPage
-        onLogin={login}
-        onRegister={register}
-        error={error}
-        loading={loading}
+  return (
+    <main className="app">
+      <header className="app-header">
+        <h1>Habit Tracker</h1>
+        <div className="app-user-bar">
+          <span className="app-user-email">{email}</span>
+          <button type="button" className="logout-button" onClick={onLogout}>
+            ログアウト
+          </button>
+        </div>
+      </header>
+      <AddHabitForm onAdd={addHabit} />
+      <WeeklyCalendar days={weeklyOverview.days} rows={weeklyOverview.rows} />
+      <HabitList
+        groups={selectActiveGroups(habits)}
+        onCheckIn={checkInToday}
+        onEdit={editHabit}
+        onArchive={archiveHabit}
       />
+      <ArchivedHabitList habits={selectArchivedHabits(habits)} onRestore={unarchiveHabit} />
+    </main>
+  );
+}
+
+function App() {
+  const auth = useAuth();
+
+  if (auth.status === "loading") {
+    return (
+      <main className="app">
+        <p>読み込み中...</p>
+      </main>
     );
   }
 
-  return (
-    <div className="container">
-      <div className="app-header">
-        <h1>Habit Tracker</h1>
-        <button className="logout-btn" onClick={logout} aria-label="ログアウト">
-          ログアウト
-        </button>
-      </div>
-      <AddHabitForm uniqueCategories={uniqueCategories} onAdd={addHabit} />
-      <WeeklyCalendar habits={activeHabits} />
-      <HabitList
-        habits={activeHabits}
-        isCheckedToday={isCheckedToday}
-        getStreak={getStreak}
-        onCheckIn={checkIn}
-        onArchive={archiveHabit}
-        editState={editState}
-      />
-      <ArchivedSection habits={archivedHabits} onUnarchive={unarchiveHabit} />
-    </div>
-  );
+  if (auth.status === "anonymous" || !auth.user) {
+    return <LoginForm onLogin={auth.login} onRegister={auth.register} />;
+  }
+
+  return <HabitsApp email={auth.user.email} onLogout={auth.logout} />;
 }
 
 export default App;

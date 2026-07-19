@@ -1,41 +1,32 @@
 {
-  "name": "habit-app",
+  "name": "habit-tracker",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "test": "vitest run",
-    "lint": "eslint .",
+    "lint": "oxlint",
     "preview": "vite preview",
-    "guard:clock": "grep -rn 'new Date()' src/data && echo 'src/data では現在時刻を直接参照しない。today を引数で受け取り、テストで固定できるように' 1>&2 && exit 2 || true",
-    "guard:types": "tsc --noEmit",
-    "guard:test": "vitest run >/tmp/test.log 2>&1 || { tail -10 /tmp/test.log 1>&2; exit 2; }"
+    "test": "vitest run",
+    "guard:color": "grep -rnE '#[0-9a-fA-F]{3,6}' src --include='*.ts' --include='*.tsx' 1>&2 && echo '色の値はコードに直書きしない。index.css のCSS変数に定義し、var(--...) で参照する' 1>&2 && exit 2 || true"
   },
   "dependencies": {
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.61.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
-    "@types/node": "^24.12.3",
-    "@types/react": "^19.2.14",
+    "@types/node": "^24.13.2",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
-    "@vitest/ui": "^4.1.9",
-    "eslint": "^10.3.0",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
-    "globals": "^17.6.0",
+    "@vitejs/plugin-react": "^6.0.3",
     "jsdom": "^29.1.1",
+    "oxlint": "^1.71.0",
     "typescript": "~6.0.2",
-    "typescript-eslint": "^8.59.2",
-    "vite": "^8.0.12",
-    "vitest": "^4.1.9"
+    "vite": "^8.1.1",
+    "vitest": "^4.1.10"
   }
 }

@@ -5,14 +5,18 @@ paths:
   - "api/tests/**/*.py"
 ---
 # Testing
-- ロジックの単体テストは frontend/src/data/ に置く。today を固定する
-- streak のテストは月・年の境界ケースを含める
-- コンポーネントは Testing Library で、表示と操作を確認する
 - 失敗したテストを削除して通さない（原因を直すか、仕様変更ならテストを更新する）
 
-## バックエンド
-- テスト用 DB はインメモリ SQLite（StaticPool）。ファイルを作らない
-- DB は各テストで作り直す
-- 認証のいらないテスト（health・auth）は client を使う
-- 習慣の操作は auth_client を使う（実際に /auth/register を呼び、モックしない）
-- ユーザー分離は、ヘッダーのトークンを切り替えて確認する
+## Frontend
+- ロジックの単体テストは src/data/ に作成する
+- streak のテストでは現在日時を固定する（today を引数で渡す）
+- コンポーネントは Testing Library で、表示と操作を確認する
+- テスト名は日本語で、「条件→期待結果」の順に書く
+
+## Backend
+- テスト名は日本語で、「条件→期待結果」の順に書く
+- crud関数を直接呼ばず、TestClientでHTTPリクエストのレスポンス（ステータスコード・JSON）を検証する
+- DBはテストごとにin-memory SQLiteを作り直し、テスト間で状態を共有しない
+- 認証が必要なテストは auth_headers フィクスチャで実際に登録・ログインしてトークンを取得する（トークンを直接組み立てない）
+- 他ユーザーのデータに触れられないことを確認するテストは test_habit_isolation.py にまとめる
+

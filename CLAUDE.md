@@ -1,37 +1,32 @@
-# Project Overview
-Habit Tracker は、日々の習慣達成を記録する Web アプリ。
-ユーザー登録・ログイン（JWT）で複数ユーザーのデータを分離管理する。
+# Habit Tracker
+日々の習慣達成を記録する小さな Web アプリ。
 
-# Structure
-- frontend/  Vite + React SPA（TypeScript）
-- api/       FastAPI バックエンド（SQLite + Alembic、JWT 認証）
+## Structure
+- frontend/ : React + TypeScript + Vite のフロントエンド
+- api/ : FastAPI バックエンド（uv管理、SQLite + Alembic、JWT認証）
 
-# Commands
+## Commands
+- Install (frontend): pnpm -C frontend install
+- Dev (frontend): pnpm -C frontend dev
+- Build (frontend): pnpm -C frontend build
+- Test (frontend): pnpm -C frontend test
+- Lint (frontend): pnpm -C frontend lint
+- Install (api): uv sync --directory api
+- Dev (api): uv run --directory api uvicorn app.main:app --reload --port 8000
+- Test (api): uv run --directory api pytest
+- Migrate (api): uv run --directory api alembic upgrade head
+- Migration check (api): uv run --directory api alembic check
 
-## フロントエンド（frontend/ で実行）
-- pnpm dev
-- pnpm lint
-- pnpm test
-- pnpm build
-
-## バックエンド（api/ で実行）
-- uv run uvicorn app.main:app --reload   # 開発サーバー（:8000）
-- uv run pytest                          # テスト
-- uv run alembic upgrade head            # マイグレーション適用
-
-## 環境変数
-- frontend/.env  →  VITE_API_URL=http://localhost:8000（デフォルト）
-- api/app/auth.py の SECRET_KEY は環境変数 SECRET_KEY で上書き（本番用）
-
-# Product Rules
+## Product Rules
+- 1つの習慣は1日に1回だけ check-in できる
 - アーカイブは削除と区別する（消さず、一覧から外して戻せる）
 - 取り消せない操作は、実行する前に確認する
-- データはユーザーごとに分離する（他ユーザーのデータを操作しない）
 
-# Workflow
+## Workflow
 - 変更前に関連ファイルを確認する
 - 大きな変更では先に実装計画を提示する
-- UI 変更では可能なら表示確認を行う
+- 追加した UI・API はテストを書き、可能なら動作確認を行う
 
-# Project Context
+## Project Context
 - プロジェクトの規約は .claude/rules/ に整理してある
+- 一部の規約は .claude/settings.json の hook で機械的にチェックされる（例: モデル変更時のマイグレーション作成漏れ、JWT_SECRET_KEY/CORS設定の直接編集のブロック）

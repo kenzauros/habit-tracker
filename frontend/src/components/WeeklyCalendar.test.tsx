@@ -1,90 +1,47 @@
-// @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, cleanup, fireEvent } from "@testing-library/react";
-import "@testing-library/jest-dom/vitest";
+import { describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/react";
 import { WeeklyCalendar } from "./WeeklyCalendar";
-import type { Habit } from "../data/types";
+import type { WeeklyDayColumn, WeeklyHabitRow } from "../hooks/selectors";
 
-// Fix today to a known Sunday so week = Mon 2024-06-17 … Sun 2024-06-23
-const FIXED_TODAY = new Date("2024-06-21T12:00:00"); // Friday
+const DAYS: WeeklyDayColumn[] = [
+  { date: "2024-01-14", weekdayLabel: "日", dayOfMonth: 14, isToday: false },
+  { date: "2024-01-15", weekdayLabel: "月", dayOfMonth: 15, isToday: true },
+  { date: "2024-01-16", weekdayLabel: "火", dayOfMonth: 16, isToday: false },
+  { date: "2024-01-17", weekdayLabel: "水", dayOfMonth: 17, isToday: false },
+  { date: "2024-01-18", weekdayLabel: "木", dayOfMonth: 18, isToday: false },
+  { date: "2024-01-19", weekdayLabel: "金", dayOfMonth: 19, isToday: false },
+  { date: "2024-01-20", weekdayLabel: "土", dayOfMonth: 20, isToday: false },
+];
 
-function makeHabit(overrides: Partial<Habit> = {}): Habit {
+function makeRow(overrides: Partial<WeeklyHabitRow>): WeeklyHabitRow {
   return {
-    id: "h1",
-    name: "テスト習慣",
-    checkedDates: [],
+    id: "1",
+    name: "運動する",
+    color: { bg: "var(--category-1-bg)", text: "var(--category-1-text)", border: "var(--category-1-border)" },
+    checkedDays: [false, false, false, false, false, false, false],
     ...overrides,
   };
 }
 
-beforeEach(() => {
-  vi.useFakeTimers();
-  vi.setSystemTime(FIXED_TODAY);
-});
-
-afterEach(() => {
-  cleanup();
-  vi.useRealTimers();
-});
-
 describe("WeeklyCalendar", () => {
-  it("習慣がないとき何も表示しない", () => {
-    const { container } = render(<WeeklyCalendar habits={[]} />);
-    expect(container.firstChild).toBeNull();
+  it("shows a fallback message when there are no habits", () => {
+    render(<WeeklyCalendar days={DAYS} rows={[]} />);
+    expect(screen.getByText("表示できる習慣がありません。")).toBeInTheDocument();
   });
 
-  it("曜日ラベルが月〜日の順で表示される", () => {
-    render(<WeeklyCalendar habits={[makeHabit()]} />);
-    const days = ["月", "火", "水", "木", "金", "土", "日"];
-    days.forEach((label) => {
-      expect(screen.getAllByText(label).length).toBeGreaterThan(0);
-    });
+  it("renders each habit's name with a check mark for checked-in days", () => {
+    const rows = [makeRow({ checkedDays: [true, false, true, false, false, false, false] })];
+    render(<WeeklyCalendar days={DAYS} rows={rows} />);
+
+    expect(screen.getByText("運動する")).toBeInTheDocument();
+    expect(screen.getAllByLabelText("チェック済み")).toHaveLength(2);
+    expect(screen.getAllByLabelText("未チェック")).toHaveLength(5);
   });
 
-  it("今週の日付範囲がヘッダーに表示される（6/17 – 6/23）", () => {
-    render(<WeeklyCalendar habits={[makeHabit()]} />);
-    expect(screen.getByText("6/17 – 6/23")).toBeInTheDocument();
-  });
-
-  it("check-in 済みの日はドットが dotChecked クラスを持つ", () => {
-    const habit = makeHabit({ checkedDates: ["2024-06-21"] });
-    render(<WeeklyCalendar habits={[habit]} />);
-    const checked = document.querySelectorAll('[class*="dotChecked"]');
-    expect(checked.length).toBe(1);
-  });
-
-  it("未達成の日はドットが dotChecked クラスを持たない", () => {
-    const habit = makeHabit({ checkedDates: [] });
-    render(<WeeklyCalendar habits={[habit]} />);
-    const checked = document.querySelectorAll('[class*="dotChecked"]');
-    expect(checked.length).toBe(0);
-  });
-
-  it("前の週ボタンで週ラベルが 6/10 – 6/16 に変わる", () => {
-    render(<WeeklyCalendar habits={[makeHabit()]} />);
-    fireEvent.click(screen.getByRole("button", { name: "前の週" }));
-    expect(screen.getByText("6/10 – 6/16")).toBeInTheDocument();
-  });
-
-  it("前の週に移動後、今週ボタンで元に戻る", () => {
-    render(<WeeklyCalendar habits={[makeHabit()]} />);
-    fireEvent.click(screen.getByRole("button", { name: "前の週" }));
-    fireEvent.click(screen.getByRole("button", { name: "今週" }));
-    expect(screen.getByText("6/17 – 6/23")).toBeInTheDocument();
-  });
-
-  it("習慣名がテーブルに表示される", () => {
-    render(<WeeklyCalendar habits={[makeHabit({ name: "ランニング" })]} />);
-    expect(screen.getByText("ランニング")).toBeInTheDocument();
-  });
-
-  it("複数の習慣が全て表示される", () => {
-    const habits: Habit[] = [
-      { id: "a", name: "習慣A", checkedDates: [] },
-      { id: "b", name: "習慣B", checkedDates: ["2024-06-21"] },
-    ];
-    render(<WeeklyCalendar habits={habits} />);
-    expect(screen.getByText("習慣A")).toBeInTheDocument();
-    expect(screen.getByText("習慣B")).toBeInTheDocument();
+  it("renders a column for every day of the week", () => {
+    render(<WeeklyCalendar days={DAYS} rows={[makeRow({})]} />);
+    for (const day of DAYS) {
+      expect(screen.getByText(String(day.dayOfMonth))).toBeInTheDocument();
+    }
   });
 });

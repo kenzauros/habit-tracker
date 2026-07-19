@@ -3,7 +3,7 @@
 - UI（表示）・状態管理・データ取得は同じファイルに混ぜない
 - 共通ロジックは frontend/src/data/ に寄せ、コンポーネントから切り離す
 - 日付はユーザーのローカル日付で扱う
-- package manager は pnpm を使用する
-- 型定義は利用箇所の近くに置く
+- package manager は frontend が pnpm、api が uv
+- 型定義は利用箇所の近くに書く
 - any を追加する場合は理由をコメントする
-- 例外は throw せず、Result 型で返す
+- 例外は throw せず、Result 型で返す（frontend/src に限る）

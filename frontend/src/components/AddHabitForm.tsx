@@ -1,39 +1,57 @@
-import { useAddForm } from "../hooks/useAddForm";
+import { useState } from "react";
+import type { FormEvent } from "react";
+import type { HabitResult } from "../data/habit";
+import { HABIT_ERROR_MESSAGES } from "../data/habit";
 
 interface Props {
-  uniqueCategories: string[];
-  onAdd: (name: string, category: string) => void;
+  onAdd: (name: string, category: string) => Promise<HabitResult>;
 }
 
-export function AddHabitForm({ uniqueCategories, onAdd }: Props) {
-  const { input, setInput, catInput, setCatInput, submit } = useAddForm(onAdd);
+export function AddHabitForm({ onAdd }: Props) {
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const result = await onAdd(name, category);
+    if (!result.ok) {
+      setError(HABIT_ERROR_MESSAGES[result.error]);
+      return;
+    }
+    setName("");
+    setCategory("");
+    setError(null);
+  }
 
   return (
-    <form className="add-form" onSubmit={(e) => { e.preventDefault(); submit(); }}>
-      <div className="add-fields">
+    <form className="add-habit-form" onSubmit={handleSubmit}>
+      <div className="add-habit-form-fields">
         <input
           type="text"
+          value={name}
+          onChange={(event) => {
+            setName(event.target.value);
+            setError(null);
+          }}
           placeholder="新しい習慣を入力..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
+          aria-label="習慣名"
         />
         <input
           type="text"
-          list="categories-list"
-          placeholder="カテゴリ（任意）"
-          className="cat-field"
-          value={catInput}
-          onChange={(e) => setCatInput(e.target.value)}
+          value={category}
+          onChange={(event) => setCategory(event.target.value)}
+          placeholder="カテゴリ(任意)"
+          aria-label="カテゴリ"
+          className="category-input"
         />
+        <button type="submit">追加</button>
       </div>
-      <button type="submit" disabled={!input.trim()}>
-        追加
-      </button>
-      <datalist id="categories-list">
-        {uniqueCategories.map((c) => (
-          <option key={c} value={c} />
-        ))}
-      </datalist>
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
     </form>
   );
 }
