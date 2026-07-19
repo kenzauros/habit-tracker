@@ -3,10 +3,12 @@ import { useHabits } from "./hooks/useHabits";
 import {
   selectActiveGroups,
   selectArchivedHabits,
+  selectHabitStats,
   selectWeeklyOverview,
 } from "./hooks/selectors";
 import { AddHabitForm } from "./components/AddHabitForm";
 import { HabitList } from "./components/HabitList";
+import { HabitStats } from "./components/HabitStats";
 import { WeeklyCalendar } from "./components/WeeklyCalendar";
 import { ArchivedHabitList } from "./components/ArchivedHabitList";
 import { LoginForm } from "./components/LoginForm";
@@ -34,6 +36,7 @@ function HabitsApp({ email, onLogout }: HabitsAppProps) {
         </div>
       </header>
       <AddHabitForm onAdd={addHabit} />
+      <HabitStats stats={selectHabitStats(habits)} />
       <WeeklyCalendar days={weeklyOverview.days} rows={weeklyOverview.rows} />
       <HabitList
         groups={selectActiveGroups(habits)}

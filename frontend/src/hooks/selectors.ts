@@ -1,5 +1,5 @@
 import type { Habit } from "../data/types";
-import { calculateStreak } from "../data/streak";
+import { calculateLongestStreak, calculateStreak } from "../data/streak";
 import { formatDate, todayString, weekdayLabel } from "../data/date";
 import { getCategoryColor, groupByCategory } from "../data/category";
 import { getWeekDates } from "../data/week";
@@ -79,4 +79,39 @@ export function selectWeeklyOverview(habits: Habit[], today: Date = new Date()):
     }));
 
   return { days, rows };
+}
+
+export interface HabitStreakRecord {
+  habitId: string;
+  name: string;
+  streak: number;
+}
+
+export interface HabitStatsSummary {
+  activeCount: number;
+  checkedInTodayCount: number;
+  currentBest: HabitStreakRecord | null;
+  longestEver: HabitStreakRecord | null;
+}
+
+function bestStreakRecord(
+  habits: Habit[],
+  getStreak: (habit: Habit) => number,
+): HabitStreakRecord | null {
+  return habits.reduce<HabitStreakRecord | null>((best, habit) => {
+    const streak = getStreak(habit);
+    return !best || streak > best.streak ? { habitId: habit.id, name: habit.name, streak } : best;
+  }, null);
+}
+
+export function selectHabitStats(habits: Habit[], today: Date = new Date()): HabitStatsSummary {
+  const active = habits.filter((habit) => !habit.archived);
+  const todayDate = formatDate(today);
+
+  return {
+    activeCount: active.length,
+    checkedInTodayCount: active.filter((habit) => habit.checkIns.includes(todayDate)).length,
+    currentBest: bestStreakRecord(active, (habit) => calculateStreak(habit.checkIns, today)),
+    longestEver: bestStreakRecord(active, (habit) => calculateLongestStreak(habit.checkIns)),
+  };
 }
