@@ -31,3 +31,4 @@
 - プロジェクトの規約は .claude/rules/ に整理してある
 - 一部の規約は .claude/settings.json の hook で機械的にチェックされる（例: モデル変更時のマイグレーション作成漏れ、JWT_SECRET_KEY/CORS設定の直接編集のブロック）
 - 定型作業はスキルを利用する（コンポーネント追加は add-component、リリースは release）
+- 必要に応じてサブエージェントを利用する（UI/APIレビューは ui-reviewer/api-reviewer、実装は frontend-developer（並列実装では worktree で分離））
