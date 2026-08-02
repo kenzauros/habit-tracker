@@ -18,6 +18,14 @@
       "headers": {
         "Authorization": "Bearer ${CONTEXT7_API_KEY}"
       }
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${GITHUB_MCP_PAT}",
+        "X-MCP-Toolsets": "repos,issues,pull_requests"
+      }
     }
   }
 }
