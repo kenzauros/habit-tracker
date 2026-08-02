@@ -1,3 +1,6 @@
+import csv
+import io
+
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -91,3 +94,12 @@ def set_archived(db: Session, habit: Habit, archived: bool) -> Habit:
     db.commit()
     db.refresh(habit)
     return habit
+
+
+def build_check_ins_csv(habit: Habit) -> bytes:
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(["date"])
+    for date in sorted(check_in.date for check_in in habit.check_ins):
+        writer.writerow([date])
+    return buffer.getvalue().encode("utf-8-sig")
