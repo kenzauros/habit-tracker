@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "habit-db": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@bytebase/dbhub",
+        "--transport",
+        "stdio",
+        "--config",
+        "dbhub.toml"
+      ]
+    }
+  }
+}
