@@ -43,7 +43,9 @@
       "Bash(git log:*)",
       "Bash(git branch:*)",
       "mcp__habit-db__execute_sql",
-      "mcp__habit-db__search_objects"
+      "mcp__habit-db__search_objects",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs"
     ],
     "ask": [
       "Bash(git add:*)",
