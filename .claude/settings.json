@@ -41,7 +41,9 @@
       "Bash(git status)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "mcp__habit-db__execute_sql",
+      "mcp__habit-db__search_objects"
     ],
     "ask": [
       "Bash(git add:*)",
