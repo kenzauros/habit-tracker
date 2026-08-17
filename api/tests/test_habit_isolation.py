@@ -43,6 +43,15 @@ def test_他ユーザーの習慣をアーカイブできず404になる(client,
     assert response.status_code == 404
 
 
+def test_他ユーザーの習慣のCSVエクスポートは404になる(client, auth_headers):
+    headers_a = auth_headers("owner-export@example.com", "password123")
+    headers_b = auth_headers("intruder-export@example.com", "password123")
+    habit_id = _create_habit(client, headers_a).json()["id"]
+
+    response = client.get(f"/habits/{habit_id}/check-ins/export", headers=headers_b)
+    assert response.status_code == 404
+
+
 def test_リクエストボディにuser_idを渡しても無視される(client, auth_headers):
     headers_a = auth_headers("owner4@example.com", "password123")
     headers_b = auth_headers("intruder4@example.com", "password123")

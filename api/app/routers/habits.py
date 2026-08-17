@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from urllib.parse import quote
+
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_user
@@ -6,6 +8,7 @@ from app.crud.habits import (
     DUPLICATE,
     EMPTY,
     add_check_in,
+    build_check_ins_csv,
     create_habit,
     get_owned_habit,
     list_habits,
@@ -80,6 +83,28 @@ def post_check_in(
 ) -> HabitResponse:
     habit = _get_owned_or_404(db, current_user, habit_id)
     return serialize_habit(add_check_in(db, habit, payload.date))
+
+
+@router.get(
+    "/{habit_id}/check-ins/export",
+    response_class=Response,
+    responses={200: {"content": {"text/csv": {"schema": {"type": "string", "format": "binary"}}}}},
+)
+def export_check_ins(
+    habit_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Response:
+    habit = _get_owned_or_404(db, current_user, habit_id)
+    content = build_check_ins_csv(habit)
+    filename = quote(f"{habit.name}_check-ins.csv", safe="")
+    return Response(
+        content=content,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename=\"check-ins.csv\"; filename*=UTF-8''{filename}"
+        },
+    )
 
 
 @router.post("/{habit_id}/archive", response_model=HabitResponse)
