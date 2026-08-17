@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, ForeignKey, String, UniqueConstraint
+from sqlalchemy import Boolean, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -19,6 +19,7 @@ class Habit(Base):
     category: Mapped[str] = mapped_column(String, nullable=False, default=UNCATEGORIZED)
     created_at: Mapped[str] = mapped_column(String, nullable=False, default=_now_iso)
     archived: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     user: Mapped["User"] = relationship(back_populates="habits")
     check_ins: Mapped[list["CheckIn"]] = relationship(

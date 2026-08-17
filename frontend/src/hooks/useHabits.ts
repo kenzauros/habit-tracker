@@ -74,6 +74,18 @@ export function useHabits() {
     );
   }
 
+  function reorderHabit(id: string, order: number) {
+    setHabits((prev) => {
+      const index = prev.findIndex((habit) => habit.id === id);
+      if (index < 0) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(index, 1);
+      next.splice(Math.min(order, next.length), 0, moved);
+      return next;
+    });
+    habitsApi.reorderHabit(id, order);
+  }
+
   function archiveHabit(id: string) {
     setArchivedLocally(id, true, setHabits);
     habitsApi.archiveHabit(id).then((result) => {
@@ -95,6 +107,7 @@ export function useHabits() {
     addHabit,
     checkInToday,
     editHabit,
+    reorderHabit,
     archiveHabit,
     unarchiveHabit,
   };

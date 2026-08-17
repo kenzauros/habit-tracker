@@ -87,3 +87,37 @@ def test_アーカイブを戻すとarchivedがfalseになる(client, auth_heade
     response = client.post(f"/habits/{habit_id}/unarchive", headers=headers)
     assert response.status_code == 200
     assert response.json()["archived"] is False
+
+
+def test_orderに移動先の位置を指定するとその位置に並べ替わる(client, auth_headers):
+    headers = auth_headers()
+    first_id = _create_habit(client, headers, name="読書").json()["id"]
+    second_id = _create_habit(client, headers, name="運動").json()["id"]
+
+    response = client.patch(
+        f"/habits/{first_id}/reorder", json={"order": 1}, headers=headers
+    )
+    assert response.status_code == 200
+    assert [habit["id"] for habit in response.json()] == [second_id, first_id]
+
+
+def test_同じorderを二回送っても並び順が変わらない(client, auth_headers):
+    headers = auth_headers()
+    _create_habit(client, headers, name="読書")
+    # 2番目に作った習慣（運動）を対象にreorderする
+    second_id = _create_habit(client, headers, name="運動").json()["id"]
+
+    # 1回目: order=0（先頭）へ移動
+    first = client.patch(
+        f"/habits/{second_id}/reorder", json={"order": 0}, headers=headers
+    )
+    assert first.status_code == 200
+    order_after_first = [habit["id"] for habit in first.json()]
+
+    # 2回目: 同じorder=0をもう一度送る（再送を模擬）
+    second = client.patch(
+        f"/habits/{second_id}/reorder", json={"order": 0}, headers=headers
+    )
+    assert second.status_code == 200
+    # 1回目と2回目で並び順が変わっていなければ冪等
+    assert [habit["id"] for habit in second.json()] == order_after_first

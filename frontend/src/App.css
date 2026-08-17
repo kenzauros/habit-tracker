@@ -96,6 +96,18 @@ input.category-input {
   border-radius: 8px;
 }
 
+.habit-drop-zone {
+  list-style: none;
+}
+
+.drag-handle {
+  width: 12px;
+  height: 18px;
+  border-left: 2px dotted var(--border);
+  border-right: 2px dotted var(--border);
+  cursor: grab;
+}
+
 .habit-info {
   display: flex;
   align-items: center;

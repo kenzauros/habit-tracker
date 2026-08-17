@@ -28,8 +28,18 @@ def normalize_category(category: str) -> str:
 
 def list_habits(db: Session, user_id: str) -> list[Habit]:
     return list(
-        db.scalars(select(Habit).where(Habit.user_id == user_id).order_by(Habit.created_at))
+        db.scalars(
+            select(Habit).where(Habit.user_id == user_id).order_by(Habit.order, Habit.created_at)
+        )
     )
+
+
+def set_absolute_order(db: Session, habit: Habit, order: int) -> None:
+    siblings = [s for s in list_habits(db, habit.user_id) if s.id != habit.id]
+    siblings.insert(min(order, len(siblings)), habit)
+    for index, sibling in enumerate(siblings):
+        sibling.order = index
+    db.commit()
 
 
 def get_owned_habit(db: Session, user_id: str, habit_id: str) -> Habit | None:

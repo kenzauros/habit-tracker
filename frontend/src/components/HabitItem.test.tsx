@@ -32,6 +32,7 @@ describe("HabitItem", () => {
           onCheckIn={vi.fn()}
           onEdit={onEdit}
           onArchive={vi.fn()}
+          onDragStart={vi.fn()}
         />
       </ul>,
     );
@@ -57,6 +58,7 @@ describe("HabitItem", () => {
           onCheckIn={vi.fn()}
           onEdit={onEdit}
           onArchive={vi.fn()}
+          onDragStart={vi.fn()}
         />
       </ul>,
     );
@@ -83,6 +85,7 @@ describe("HabitItem", () => {
           onCheckIn={vi.fn()}
           onEdit={onEdit}
           onArchive={vi.fn()}
+          onDragStart={vi.fn()}
         />
       </ul>,
     );

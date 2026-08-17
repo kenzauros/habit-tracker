@@ -11,6 +11,10 @@ class HabitUpdateRequest(BaseModel):
     category: str = ""
 
 
+class HabitReorderRequest(BaseModel):
+    order: int = Field(ge=0)
+
+
 class CheckInRequest(BaseModel):
     date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
 
