@@ -10,8 +10,8 @@ from app.crud.habits import (
     get_owned_habit,
     list_habits,
     serialize_habit,
+    set_absolute_order,
     set_archived,
-    swap_with_neighbor,
     update_habit,
 )
 from app.database import get_db
@@ -97,7 +97,7 @@ def reorder_habit(
     db: Session = Depends(get_db),
 ) -> list[HabitResponse]:
     habit = _get_owned_or_404(db, current_user, habit_id)
-    swap_with_neighbor(db, habit, payload.direction)
+    set_absolute_order(db, habit, payload.order)
     return [serialize_habit(h) for h in list_habits(db, current_user.id)]
 
 

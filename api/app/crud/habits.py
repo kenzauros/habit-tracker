@@ -34,17 +34,11 @@ def list_habits(db: Session, user_id: str) -> list[Habit]:
     )
 
 
-def swap_with_neighbor(db: Session, habit: Habit, direction: str) -> None:
-    siblings = list_habits(db, habit.user_id)
+def set_absolute_order(db: Session, habit: Habit, order: int) -> None:
+    siblings = [s for s in list_habits(db, habit.user_id) if s.id != habit.id]
+    siblings.insert(min(order, len(siblings)), habit)
     for index, sibling in enumerate(siblings):
         sibling.order = index
-    position = next(index for index, sibling in enumerate(siblings) if sibling.id == habit.id)
-    target = position - 1 if direction == "up" else position + 1
-    if 0 <= target < len(siblings):
-        siblings[position].order, siblings[target].order = (
-            siblings[target].order,
-            siblings[position].order,
-        )
     db.commit()
 
 

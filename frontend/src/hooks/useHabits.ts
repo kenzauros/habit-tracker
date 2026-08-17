@@ -74,16 +74,16 @@ export function useHabits() {
     );
   }
 
-  function reorderHabit(id: string, direction: "up" | "down") {
+  function reorderHabit(id: string, order: number) {
     setHabits((prev) => {
       const index = prev.findIndex((habit) => habit.id === id);
-      const target = direction === "up" ? index - 1 : index + 1;
-      if (index < 0 || target < 0 || target >= prev.length) return prev;
+      if (index < 0) return prev;
       const next = [...prev];
-      [next[index], next[target]] = [next[target], next[index]];
+      const [moved] = next.splice(index, 1);
+      next.splice(Math.min(order, next.length), 0, moved);
       return next;
     });
-    habitsApi.reorderHabit(id, direction);
+    habitsApi.reorderHabit(id, order);
   }
 
   function archiveHabit(id: string) {

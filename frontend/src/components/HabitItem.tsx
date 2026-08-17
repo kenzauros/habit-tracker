@@ -91,7 +91,11 @@ export function HabitItem({
   return (
     <li className="habit-item">
       <div className="habit-info">
-        <span className="drag-handle" onPointerDown={() => onDragStart(habit.id)} />
+        <span
+          className="drag-handle"
+          onPointerDown={() => onDragStart(habit.id)}
+          aria-label="ドラッグして並び順を変更"
+        />
         <span className="habit-name">{habit.name}</span>
         <span className="habit-streak">🔥 {streak}日</span>
       </div>

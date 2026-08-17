@@ -46,11 +46,11 @@ export async function checkIn(id: string, date: string): Promise<SimpleResult> {
 
 export async function reorderHabit(
   id: string,
-  direction: "up" | "down",
+  order: number,
 ): Promise<{ ok: true; habits: Habit[] } | { ok: false }> {
   const result = await apiRequest<Habit[]>(`/habits/${id}/reorder`, {
     method: "PATCH",
-    body: { direction },
+    body: { order },
   });
   if (!result.ok) return { ok: false };
   return { ok: true, habits: result.data };

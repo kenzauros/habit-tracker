@@ -8,15 +8,16 @@ interface Props {
   onCheckIn: (id: string) => void;
   onEdit: (id: string, name: string, category: string) => Promise<HabitResult>;
   onArchive: (id: string) => void;
-  onReorder: (id: string, direction: "up" | "down") => void;
+  onReorder: (id: string, order: number) => void;
 }
 
 export function HabitList({ groups, onCheckIn, onEdit, onArchive, onReorder }: Props) {
   const [draggingId, setDraggingId] = useState<string | null>(null);
 
-  function handleDrop(targetId: string, targetIndex: number, sourceIndex: number) {
+  // 移動先の位置そのもの（絶対値）を渡す。同じ位置に何度ドロップしても結果は変わらない
+  function handleDrop(targetId: string, targetIndex: number) {
     if (draggingId === null || draggingId === targetId) return;
-    onReorder(draggingId, targetIndex < sourceIndex ? "up" : "down");
+    onReorder(draggingId, targetIndex);
     setDraggingId(null);
   }
 
@@ -45,13 +46,7 @@ export function HabitList({ groups, onCheckIn, onEdit, onArchive, onReorder }: P
               <li
                 key={habit.id}
                 className="habit-drop-zone"
-                onPointerUp={() =>
-                  handleDrop(
-                    habit.id,
-                    index,
-                    habits.findIndex(({ habit: h }) => h.id === draggingId),
-                  )
-                }
+                onPointerUp={() => handleDrop(habit.id, index)}
               >
                 <HabitItem
                   habit={habit}

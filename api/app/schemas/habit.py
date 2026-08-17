@@ -1,5 +1,3 @@
-from typing import Literal
-
 from pydantic import BaseModel, Field
 
 
@@ -14,7 +12,7 @@ class HabitUpdateRequest(BaseModel):
 
 
 class HabitReorderRequest(BaseModel):
-    direction: Literal["up", "down"]
+    order: int = Field(ge=0)
 
 
 class CheckInRequest(BaseModel):
