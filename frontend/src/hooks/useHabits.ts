@@ -74,6 +74,18 @@ export function useHabits() {
     );
   }
 
+  function reorderHabit(id: string, direction: "up" | "down") {
+    setHabits((prev) => {
+      const index = prev.findIndex((habit) => habit.id === id);
+      const target = direction === "up" ? index - 1 : index + 1;
+      if (index < 0 || target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+    habitsApi.reorderHabit(id, direction);
+  }
+
   function archiveHabit(id: string) {
     setArchivedLocally(id, true, setHabits);
     habitsApi.archiveHabit(id).then((result) => {
@@ -95,6 +107,7 @@ export function useHabits() {
     addHabit,
     checkInToday,
     editHabit,
+    reorderHabit,
     archiveHabit,
     unarchiveHabit,
   };

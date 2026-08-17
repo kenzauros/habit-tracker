@@ -11,12 +11,19 @@ from app.crud.habits import (
     list_habits,
     serialize_habit,
     set_archived,
+    swap_with_neighbor,
     update_habit,
 )
 from app.database import get_db
 from app.models.habit import Habit
 from app.models.user import User
-from app.schemas.habit import CheckInRequest, HabitCreateRequest, HabitResponse, HabitUpdateRequest
+from app.schemas.habit import (
+    CheckInRequest,
+    HabitCreateRequest,
+    HabitReorderRequest,
+    HabitResponse,
+    HabitUpdateRequest,
+)
 
 router = APIRouter(prefix="/habits", tags=["habits"])
 
@@ -80,6 +87,18 @@ def post_check_in(
 ) -> HabitResponse:
     habit = _get_owned_or_404(db, current_user, habit_id)
     return serialize_habit(add_check_in(db, habit, payload.date))
+
+
+@router.patch("/{habit_id}/reorder", response_model=list[HabitResponse])
+def reorder_habit(
+    habit_id: str,
+    payload: HabitReorderRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[HabitResponse]:
+    habit = _get_owned_or_404(db, current_user, habit_id)
+    swap_with_neighbor(db, habit, payload.direction)
+    return [serialize_habit(h) for h in list_habits(db, current_user.id)]
 
 
 @router.post("/{habit_id}/archive", response_model=HabitResponse)

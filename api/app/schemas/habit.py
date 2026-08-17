@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -9,6 +11,10 @@ class HabitCreateRequest(BaseModel):
 class HabitUpdateRequest(BaseModel):
     name: str = Field(min_length=1)
     category: str = ""
+
+
+class HabitReorderRequest(BaseModel):
+    direction: Literal["up", "down"]
 
 
 class CheckInRequest(BaseModel):

@@ -28,8 +28,24 @@ def normalize_category(category: str) -> str:
 
 def list_habits(db: Session, user_id: str) -> list[Habit]:
     return list(
-        db.scalars(select(Habit).where(Habit.user_id == user_id).order_by(Habit.created_at))
+        db.scalars(
+            select(Habit).where(Habit.user_id == user_id).order_by(Habit.order, Habit.created_at)
+        )
     )
+
+
+def swap_with_neighbor(db: Session, habit: Habit, direction: str) -> None:
+    siblings = list_habits(db, habit.user_id)
+    for index, sibling in enumerate(siblings):
+        sibling.order = index
+    position = next(index for index, sibling in enumerate(siblings) if sibling.id == habit.id)
+    target = position - 1 if direction == "up" else position + 1
+    if 0 <= target < len(siblings):
+        siblings[position].order, siblings[target].order = (
+            siblings[target].order,
+            siblings[position].order,
+        )
+    db.commit()
 
 
 def get_owned_habit(db: Session, user_id: str, habit_id: str) -> Habit | None:

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { CategoryGroup } from "../hooks/selectors";
 import type { HabitResult } from "../data/habit";
 import { HabitItem } from "./HabitItem";
@@ -7,9 +8,18 @@ interface Props {
   onCheckIn: (id: string) => void;
   onEdit: (id: string, name: string, category: string) => Promise<HabitResult>;
   onArchive: (id: string) => void;
+  onReorder: (id: string, direction: "up" | "down") => void;
 }
 
-export function HabitList({ groups, onCheckIn, onEdit, onArchive }: Props) {
+export function HabitList({ groups, onCheckIn, onEdit, onArchive, onReorder }: Props) {
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+
+  function handleDrop(targetId: string, targetIndex: number, sourceIndex: number) {
+    if (draggingId === null || draggingId === targetId) return;
+    onReorder(draggingId, targetIndex < sourceIndex ? "up" : "down");
+    setDraggingId(null);
+  }
+
   if (groups.length === 0) {
     return <p className="empty-message">まだ習慣がありません。上のフォームから追加してください。</p>;
   }
@@ -31,16 +41,28 @@ export function HabitList({ groups, onCheckIn, onEdit, onArchive }: Props) {
             </span>
           </h2>
           <ul className="habit-list">
-            {habits.map(({ habit, streak, checkedInToday }) => (
-              <HabitItem
+            {habits.map(({ habit, streak, checkedInToday }, index) => (
+              <li
                 key={habit.id}
-                habit={habit}
-                streak={streak}
-                checkedInToday={checkedInToday}
-                onCheckIn={onCheckIn}
-                onEdit={onEdit}
-                onArchive={onArchive}
-              />
+                className="habit-drop-zone"
+                onPointerUp={() =>
+                  handleDrop(
+                    habit.id,
+                    index,
+                    habits.findIndex(({ habit: h }) => h.id === draggingId),
+                  )
+                }
+              >
+                <HabitItem
+                  habit={habit}
+                  streak={streak}
+                  checkedInToday={checkedInToday}
+                  onCheckIn={onCheckIn}
+                  onEdit={onEdit}
+                  onArchive={onArchive}
+                  onDragStart={setDraggingId}
+                />
+              </li>
             ))}
           </ul>
         </section>

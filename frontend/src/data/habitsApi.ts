@@ -44,6 +44,18 @@ export async function checkIn(id: string, date: string): Promise<SimpleResult> {
   return result.ok ? { ok: true, habit: result.data } : { ok: false };
 }
 
+export async function reorderHabit(
+  id: string,
+  direction: "up" | "down",
+): Promise<{ ok: true; habits: Habit[] } | { ok: false }> {
+  const result = await apiRequest<Habit[]>(`/habits/${id}/reorder`, {
+    method: "PATCH",
+    body: { direction },
+  });
+  if (!result.ok) return { ok: false };
+  return { ok: true, habits: result.data };
+}
+
 export async function archiveHabit(id: string): Promise<SimpleResult> {
   const result = await apiRequest<Habit>(`/habits/${id}/archive`, { method: "POST" });
   return result.ok ? { ok: true, habit: result.data } : { ok: false };

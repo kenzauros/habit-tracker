@@ -87,3 +87,15 @@ def test_アーカイブを戻すとarchivedがfalseになる(client, auth_heade
     response = client.post(f"/habits/{habit_id}/unarchive", headers=headers)
     assert response.status_code == 200
     assert response.json()["archived"] is False
+
+
+def test_下に並べ替えると順序が入れ替わる(client, auth_headers):
+    headers = auth_headers()
+    first_id = _create_habit(client, headers, name="読書").json()["id"]
+    second_id = _create_habit(client, headers, name="運動").json()["id"]
+
+    response = client.patch(
+        f"/habits/{first_id}/reorder", json={"direction": "down"}, headers=headers
+    )
+    assert response.status_code == 200
+    assert [habit["id"] for habit in response.json()] == [second_id, first_id]

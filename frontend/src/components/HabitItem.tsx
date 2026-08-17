@@ -10,6 +10,7 @@ interface Props {
   onCheckIn: (id: string) => void;
   onEdit: (id: string, name: string, category: string) => Promise<HabitResult>;
   onArchive: (id: string) => void;
+  onDragStart: (id: string) => void;
 }
 
 export function HabitItem({
@@ -19,6 +20,7 @@ export function HabitItem({
   onCheckIn,
   onEdit,
   onArchive,
+  onDragStart,
 }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [draftName, setDraftName] = useState(habit.name);
@@ -89,6 +91,7 @@ export function HabitItem({
   return (
     <li className="habit-item">
       <div className="habit-info">
+        <span className="drag-handle" onPointerDown={() => onDragStart(habit.id)} />
         <span className="habit-name">{habit.name}</span>
         <span className="habit-streak">🔥 {streak}日</span>
       </div>

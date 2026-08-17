@@ -18,7 +18,7 @@ interface HabitsAppProps {
 }
 
 function HabitsApp({ email, onLogout }: HabitsAppProps) {
-  const { habits, addHabit, checkInToday, editHabit, archiveHabit, unarchiveHabit } =
+  const { habits, addHabit, checkInToday, editHabit, reorderHabit, archiveHabit, unarchiveHabit } =
     useHabits();
   const weeklyOverview = selectWeeklyOverview(habits);
 
@@ -40,6 +40,7 @@ function HabitsApp({ email, onLogout }: HabitsAppProps) {
         onCheckIn={checkInToday}
         onEdit={editHabit}
         onArchive={archiveHabit}
+        onReorder={reorderHabit}
       />
       <ArchivedHabitList habits={selectArchivedHabits(habits)} onRestore={unarchiveHabit} />
     </main>
