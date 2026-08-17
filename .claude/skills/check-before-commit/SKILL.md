@@ -1,3 +1,10 @@
+---
+name: check-before-commit
+description: コミット前のフロントエンドとAPIのチェックを実施する
+context: fork
+agent: Explore
+---
+
 # コミット前チェック
 コミット前に、次を確認して結果を報告してください。
 

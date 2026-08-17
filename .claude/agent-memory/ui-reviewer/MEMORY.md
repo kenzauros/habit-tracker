@@ -1,0 +1,1 @@
+- [ArchivedHabitListの空表示は意図的な例外](feedback_archived_list_empty_state.md) — 0件のときセクションごと出さない仕様であり、実装漏れではない

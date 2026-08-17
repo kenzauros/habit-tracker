@@ -6,6 +6,9 @@ CLAUDE.local.md
 !.env.example
 secrets/
 
+# サブエージェントの作業場（本文4.2）
+.claude/worktrees/
+
 # 依存・ビルド・ログ
 node_modules
 dist
