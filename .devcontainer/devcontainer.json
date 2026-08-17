@@ -17,7 +17,7 @@
   // コンテナー作成後に一度だけ実行（各エントリは並列で動く）
   "postCreateCommand": {
     "uv":         "curl -LsSf https://astral.sh/uv/install.sh | sh",
-    "claude-code": "npm install -g @anthropic-ai/claude-code"
+    "claude-code": "curl -fsSL https://claude.ai/install.sh | bash"
   },
 
   // 開発サーバー（Vite）と API（FastAPI）のポートを転送する

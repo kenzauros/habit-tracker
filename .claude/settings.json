@@ -60,7 +60,7 @@
       "Bash(uv remove --directory api:*)",
       "Bash(gh pr create:*)",
       "Bash(gh pr merge:*)",
-      "Write(**/*.env)",
+      "Bash(gh repo create:*)",
       "Edit(**/*.env)",
       "Edit(api/migrations/versions/**)",
       "WebFetch"
