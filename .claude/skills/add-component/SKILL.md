@@ -29,6 +29,7 @@ when_to_use: |
 3. `frontend/src/App.css` の末尾に、同じケバブケースのクラスでスタイルを追記する
 4. 同じ規約でテストファイル `frontend/src/components/$0.test.tsx` を作成する。最低1つのレンダリングテストと、主要なふるまい1つのテストを書く
 5. なんらかの状態を持つコンポーネントの場合は、`frontend/src/hooks/use$0.ts` も作成する
+6. `${CLAUDE_SKILL_DIR}/scripts/validate.sh` を実行して、propsの個数をチェックする
 
 ## 出力形式
 
